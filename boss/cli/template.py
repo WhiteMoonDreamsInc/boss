@@ -3,6 +3,7 @@ import os
 import sys
 import re
 import json
+from datetime import datetime
 
 from cement.utils import fs
 from boss.core import exc as boss_exc
@@ -119,8 +120,17 @@ class TemplateManager(object):
                             self.config['end_delimiter'],
                             )
 
-                if not re.match(pattern, item):
+                m = re.match(pattern, item)
+                if not m:
                     continue
+
+                # subsititute local date and time for @now@
+                if m.group(2) == 'now':
+                    self._vars['now'] = datetime.today().isoformat(' ', 'seconds')
+
+                # substitute local year for @year@
+                if m.group(2) == 'year':
+                    self._vars['year'] = datetime.today().year
 
                 for key,value in sorted(self._vars.items()):
                     if key in self._word_map:
@@ -203,7 +213,7 @@ class TemplateManager(object):
                 if m:
                     print("Injecting %s into %s at line #%s" % \
                          (inj, dest_path, line_num))
-                    line = line + "%s\n" % self._sub(inj_data)
+                    line = "%s\n" % self._sub(inj_data)
                     write_it = True
                     break
 
@@ -278,7 +288,7 @@ class TemplateManager(object):
 
                 self._write_file(dest_path, data)
 
-        # lastly do injections
+        # do injections
         if 'injections' in self.config.keys() \
             and len(self.config['injections']) > 0:
             for dest_path in self._walk_path(dest_basedir):
