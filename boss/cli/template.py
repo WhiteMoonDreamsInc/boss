@@ -250,7 +250,7 @@ class TemplateManager(object):
     def _walk_path(self, path):
         for items in os.walk(fs.abspath(path)):
             for _file in items[2]:
-                if _file == 'boss.yml':
+                if _file == 'boss.yml' or _file == 'boss.json':
                     continue
                 elif re.match('(.*)\.boss\.bak(.*)', _file):
                     continue
