@@ -58,6 +58,9 @@ example Yaml configuration file:
         .gitignore: https://raw.github.com/github/gitignore/master/Python.gitignore
         LICENSE: https://raw.github.com/datafolklabs/license/master/@license@
 
+    partials:
+      header: header.partial
+
 
 The ``variables`` setting is a list of key/value pairs.  The first item in the
 list is the variable that is set, and the second is the question as presented
@@ -70,6 +73,15 @@ saved to.  The second is the remote URL to pull the contents from.  In the
 above example we use external files to pull down a current ``.gitignore``
 file from Github, as well as a ``LICENSE`` file for the given license if it
 exists.
+
+The ``partials`` setting is a list of key/value pairs, and is optional.
+The first item in the list is the tag that will be replaced in the template,
+and the second is the name of the file that will be embedded in the template
+in place of the tag.  Boss will look for each partial file in a subdirectory
+of the template called ``partials``; if the file isn't found there, Boss will
+look for a source called ``partials``, and try to pull the partial file from
+there.  Partial files can contain variables just like other template files,
+but cannot contain references to other partials.
 
 Working with Variables
 ----------------------
