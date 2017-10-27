@@ -213,7 +213,7 @@ class TemplateManager(object):
                 if m:
                     print("Injecting %s into %s at line #%s" % \
                          (inj, dest_path, line_num))
-                    line = "%s\n" % self._sub(inj_data)
+                    line = line + "%s\n" % self._sub(inj_data)
                     write_it = True
                     break
 
