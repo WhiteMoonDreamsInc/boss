@@ -78,10 +78,10 @@ The ``partials`` setting is a list of key/value pairs, and is optional.
 The first item in the list is the tag that will be replaced in the template,
 and the second is the name of the file that will be embedded in the template
 in place of the tag.  Boss will look for each partial file in a subdirectory
-of the template called ``partials``; if the file isn't found there, Boss will
-look for a source called ``partials``, and try to pull the partial file from
+of the template called "partials"; if the file isn't found there, Boss will
+look for a source called "partials", and try to pull the partial file from
 there.  Partial files can contain variables just like other template files,
-but cannot contain references to other partials.
+but cannot embed other partials.
 
 Working with Variables
 ----------------------
@@ -101,6 +101,13 @@ These simple string operations are commonly used throughout templates.  That
 said, don't get carried away ... Boss doesn't intend to be a robust templating
 language, but rather a facility to easily build and copy templates for new
 projects.
+
+Built-in variables
+------------------
+Boss contains built-in variables that can be used in template files:
+    * ``@now``: The current local date and time
+      when a new project is created from a template
+    * ``@year``: The current local year when a new project is created from a template
 
 
 Delimiters
