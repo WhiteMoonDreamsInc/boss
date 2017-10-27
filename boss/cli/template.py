@@ -235,6 +235,76 @@ class TemplateManager(object):
         return self._inject(path)
         return True
 
+    # embed partials into template
+    def _embed(self, dest_path):
+        new_data = ''
+        write_it = False
+
+        f = open(dest_path, 'r')
+        line_num = 0
+        for line in f.readlines():
+            line_num = line_num + 1
+            # only one partial per line is allowed
+            for part,part_file in self.config['partials'].items():
+                pattern = '(.*)\%sboss.partial\:%s\%s(.*)' % (
+                    self.config['start_delimiter'],
+                    part,
+                    self.config['end_delimiter'],
+                    )
+                m = re.match(pattern, line)
+                if m:
+                    part_data = self._read_partial(part_file)
+                    if part_data:
+                        print("Embedding partial %s into %s at line #%s" % \
+                             (part, dest_path, line_num))
+                        line = "%s" % self._sub(part_data)
+                        write_it = True
+                    break
+
+            new_data = new_data + line
+        f.close()
+
+        if write_it:
+            self._write_file(dest_path, new_data, overwrite=True)
+
+    def _read_partial(self, part_file):
+        # try to read partial from template's "partials" directory
+        part_path = fs.abspath(os.path.join(self.basedir, 'partials/', part_file))
+        try:
+            f = open(part_path, 'r')
+            print("Reading partial from: %s" % part_path)
+        except OSError as e:
+            # partial wasn't under template dir, so try "partials" source
+            try:
+                src = self.app.db['sources']['partials']
+                if src['is_local']:
+                    basedir = src['path']
+                else:
+                    basedir = src['cache']
+                part_path = fs.abspath(os.path.join(basedir, part_file))
+                try:
+                    f = open(part_path, 'r')
+                    print("Reading partial from: %s" % part_path)
+                except OSError as e:
+                    print("Unable to read partial %s from boss source 'paritals'" % part_file)
+                    return False
+            except KeyError as e:
+                return False
+        part_data = f.read()
+        f.close()
+        return part_data
+
+    def _embed_or_pass(self, path):
+        if 'excludes' in self.config.keys():
+            for pattern in self.config['excludes']:
+                if re.match(pattern, path):
+                    self.app.log.debug(
+                        "not doing partial embeds for excluded %s" % path
+                        )
+                    return False
+        return self._embed(path)
+        return True
+
     def _copy_path(self, tmpl_path, dest_path):
         f = open(fs.abspath(tmpl_path), 'r')
         data = f.read()
@@ -261,6 +331,10 @@ class TemplateManager(object):
         for items in os.walk(fs.abspath(path)):
             for _file in items[2]:
                 if _file == 'boss.yml' or _file == 'boss.json':
+                    continue
+                elif re.match('partials', _file):
+                    continue
+                elif re.match('(.*)\.partial(.*)', _file):
                     continue
                 elif re.match('(.*)\.boss\.bak(.*)', _file):
                     continue
@@ -293,3 +367,9 @@ class TemplateManager(object):
             and len(self.config['injections']) > 0:
             for dest_path in self._walk_path(dest_basedir):
                 self._inject_or_pass(dest_path)
+
+        # do partials
+        if 'partials' in self.config.keys() \
+            and len(self.config['partials']) > 0:
+            for dest_path in self._walk_path(dest_basedir):
+                self._embed_or_pass(dest_path)
